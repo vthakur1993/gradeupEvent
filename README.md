@@ -1,6 +1,7 @@
 # gradeupEvent
-Initialize GradeUp.init(context)
-To send event: GradeUp.sendEvent("Testing", map)
+# Initialize GradeUp.init(context)
+
+ To send event: GradeUp.sendEvent("Testing", map)
 
 
 
@@ -11,5 +12,5 @@ allprojects {
 	}
 }
 dependencies {
-  implementation 'com.github.vthakur1993:gradeupEvent:Tag'
+  implementation 'com.github.vthakur1993:gradeupEvent:0.1.0'
 }
