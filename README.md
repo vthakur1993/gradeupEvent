@@ -1,3 +1,16 @@
 # gradeupEvent
-Initialize GradeUp.init(context)
-To send event: GradeUp.sendEvent("Testing", map)
+# Initialize GradeUp.init(context)
+
+ To send event: GradeUp.sendEvent("Testing", map)
+
+
+
+allprojects {
+	repositories {
+		...
+		maven { url 'https://jitpack.io' }
+	}
+}
+dependencies {
+  implementation 'com.github.vthakur1993:gradeupEvent:0.1.0'
+}
