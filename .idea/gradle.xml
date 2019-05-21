@@ -9,7 +9,7 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/app" />
-            <option value="$PROJECT_DIR$/gradeup_events_handler" />
+            <option value="$PROJECT_DIR$/simple_events_handler" />
           </set>
         </option>
         <option name="resolveModulePerSourceSet" value="false" />

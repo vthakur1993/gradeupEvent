@@ -1,4 +1,4 @@
-package con.example.interview.gradeup_events_handler
+package con.example.interview.simple_events_handler
 
 import android.content.Context
 import android.net.ConnectivityManager
@@ -16,48 +16,70 @@ import java.io.OutputStream
 import java.net.HttpURLConnection
 import java.net.URL
 
-class GradeUp {
+class SimpleEvents {
 
     companion object {
 
-        private var database: GradeUpEventDatabase? = null
-        private var gson: Gson? = null
+        private lateinit var database: SimpleEventsDatabaseHandler
+        private lateinit var gson: Gson
         private var isInitialized = false
-        private var cm: ConnectivityManager? = null
-        private var tm: TelephonyManager? = null
-        private var activeNetwork: NetworkInfo? = null
+        private lateinit var cm: ConnectivityManager
+        private lateinit var tm: TelephonyManager
+        private lateinit var activeNetwork: NetworkInfo
 
-        private val endpointUrl =
-            "https://event-ingestion-serivce-dot-udofy-1021.appspot.com/pubsub/publish?token=dodo3120"
-        private val BUFFER_SIZE = 256
+        private lateinit var endpointUrl: String
+        private lateinit var simpleEventViewModel: SimpleEventViewModel
+
+
         private val CONNECT_TIMEOUT_MILLIS = 2000
         private val READ_TIMEOUT_MILLIS = 10000
+        private lateinit var staticMap: HashMap<String, Any>
 
+        //these properties should be set if you need to send
+        //some values for each event and thereby reducing redundant code
+        fun setStaticProperties(map: HashMap<String, Any>) {
+            if (!::staticMap.isInitialized) {
+                staticMap = HashMap()
+            }
+            staticMap.putAll(map)
+        }
 
-        fun init(context: Context) {
-            database = GradeUpEventDatabase.getDatabase(context)
+        fun init(context: Context, endpoint: String) {
+            database = SimpleEventsDatabaseHandler(context)
             gson = Gson()
+            endpointUrl = endpoint
+            simpleEventViewModel = SimpleEventViewModel()
 
             cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
             tm = context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
-            activeNetwork = cm!!.activeNetworkInfo
+            activeNetwork = cm.activeNetworkInfo
 
             isInitialized = true
         }
 
+
         fun sendEvent(eventName: String, map: HashMap<String, Any>) {
             GlobalScope.launch {
+
                 if (!isInitialized) {
                     throw RuntimeException("Gradeup event not initialized")
                 }
 
+                if (endpointUrl.isEmpty()) {
+                    throw RuntimeException("Endpoint not initialized")
+                }
+
                 try {
                     map.put("event_name", eventName)
-                    val toJson = gson!!.toJson(map)
-                    val gradeUpEvent = GradeUpEvent(event = toJson)
-                    database!!.gradeUpEventDao().insert(gradeUpEvent)
 
-                    val gradeUpEvents = database!!.gradeUpEventDao().getGradeUpEvents()
+                    if (staticMap.size > 0)
+                        map.putAll(staticMap)
+
+                    val toJson = gson.toJson(map)
+                    val gradeUpEvent = SimpleEventModel(event = toJson)
+                    simpleEventViewModel.addEvent(gradeUpEvent, database)
+
+                    val gradeUpEvents = simpleEventViewModel.getEvents(database)
 
                     if (gradeUpEvents.size > 5 || shouldSendEvent()) {
 
@@ -70,8 +92,10 @@ class GradeUp {
                         val jsonObject = JsonObject()
                         jsonObject.add("events", jsonArray)
                         if (sendDataToServer(jsonObject.toString())) {
-                            database!!.gradeUpEventDao()
-                                .deleteGradeUpEventsBeforeId(gradeUpEvents.get(gradeUpEvents.size - 1).id!!)
+                            simpleEventViewModel.deleteGradeUpEventsBeforeId(
+                                gradeUpEvents[gradeUpEvents.size - 1].id!!,
+                                database
+                            )
                         }
                     }
                 } catch (e: Exception) {
@@ -99,7 +123,6 @@ class GradeUp {
                         postStream.close()
                     } catch (e: IOException) {
                         e.printStackTrace()
-                        // ignore, in case we've already thrown
                     }
 
                 }
@@ -109,10 +132,10 @@ class GradeUp {
         }
 
         private fun shouldSendEvent(): Boolean {
-            when (activeNetwork?.type) {
+            when (activeNetwork.type) {
                 ConnectivityManager.TYPE_WIFI -> return true
                 ConnectivityManager.TYPE_MOBILE -> {
-                    when (tm!!.networkType) {
+                    when (tm.networkType) {
                         TelephonyManager.NETWORK_TYPE_LTE or TelephonyManager.NETWORK_TYPE_HSPAP ->
                             return true
 
@@ -122,6 +145,7 @@ class GradeUp {
             }
             return false
         }
+
 
     }
 

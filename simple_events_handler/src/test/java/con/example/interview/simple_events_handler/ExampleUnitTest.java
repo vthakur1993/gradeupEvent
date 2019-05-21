@@ -1,4 +1,4 @@
-package con.example.interview.gradeup_events_handler;
+package con.example.interview.simple_events_handler;
 
 import org.junit.Test;
 
