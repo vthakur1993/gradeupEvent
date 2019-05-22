@@ -16,11 +16,11 @@ import java.io.OutputStream
 import java.net.HttpURLConnection
 import java.net.URL
 
-class SimpleEvents {
+class AnalyticsEvents {
 
     companion object {
 
-        private lateinit var database: SimpleEventsDatabaseHandler
+        private lateinit var database: AnalyticsEventsDatabaseHandler
         private lateinit var gson: Gson
         private var isInitialized = false
         private lateinit var cm: ConnectivityManager
@@ -28,7 +28,7 @@ class SimpleEvents {
         private lateinit var activeNetwork: NetworkInfo
 
         private lateinit var endpointUrl: String
-        private lateinit var simpleEventViewModel: SimpleEventViewModel
+        private lateinit var analyticsEventViewModel: AnalyticsEventViewModel
 
 
         private val CONNECT_TIMEOUT_MILLIS = 2000
@@ -45,10 +45,10 @@ class SimpleEvents {
         }
 
         fun init(context: Context, endpoint: String) {
-            database = SimpleEventsDatabaseHandler(context)
+            database = AnalyticsEventsDatabaseHandler(context)
             gson = Gson()
             endpointUrl = endpoint
-            simpleEventViewModel = SimpleEventViewModel()
+            analyticsEventViewModel = AnalyticsEventViewModel()
 
             cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
             tm = context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
@@ -79,10 +79,10 @@ class SimpleEvents {
 
 
                     val toJson = gson.toJson(map)
-                    val gradeUpEvent = SimpleEventModel(event = toJson)
-                    simpleEventViewModel.addEvent(gradeUpEvent, database)
+                    val gradeUpEvent = AnalyticsEventModel(event = toJson)
+                    analyticsEventViewModel.addEvent(gradeUpEvent, database)
 
-                    val gradeUpEvents = simpleEventViewModel.getEvents(database)
+                    val gradeUpEvents = analyticsEventViewModel.getEvents(database)
 
                     if (gradeUpEvents.size > 0 || shouldSendEvent()) {
 
@@ -95,7 +95,7 @@ class SimpleEvents {
                         val jsonObject = JsonObject()
                         jsonObject.add("events", jsonArray)
                         if (sendDataToServer(jsonObject.toString())) {
-                            simpleEventViewModel.deleteGradeUpEventsBeforeId(
+                            analyticsEventViewModel.deleteGradeUpEventsBeforeId(
                                 gradeUpEvents[gradeUpEvents.size - 1].id!!,
                                 database
                             )

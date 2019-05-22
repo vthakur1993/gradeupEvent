@@ -1,1 +1,1 @@
-include ':app', ':simple_events_handler'
+include ':app', ':GradeupAnalytics'

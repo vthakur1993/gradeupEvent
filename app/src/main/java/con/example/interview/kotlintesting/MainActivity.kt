@@ -3,8 +3,10 @@ package con.example.interview.kotlintesting
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import com.facebook.stetho.Stetho
-import con.example.interview.simple_events_handler.SimpleEvents
+import com.gradeup.analytics.AnalyticsEvents
 import kotlinx.android.synthetic.main.activity_main.*
+import java.util.*
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -12,18 +14,26 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         Stetho.initializeWithDefaults(this)
-        SimpleEvents.init(this, "https://event-ingestion-serivce-dot-udofy-1021.appspot.com/pubsub/publish?token=dodo3120")
+        AnalyticsEvents.init(this, "https://event-ingestion-serivce-dot-udofy-1021.appspot.com/pubsub/publish?token=dodo3120")
         val map = HashMap<String, Any>()
-        map.put("parameter permanent ", 1)
-        map.put("parameter permanent", "2")
-        SimpleEvents.setStaticProperties(map)
+        map.put("user_properties",AppAnalytics.getInstance().userProperty)
+        map.put("device",AppAnalytics.getInstance().deviceInfo)
+        AnalyticsEvents.setStaticProperties(map)
 
         button.setOnClickListener {
             val map = HashMap<String, Any>()
-            map.put("parameter 1", 1)
+            map.put("post_id", "1")
             map.put("parameter 2", "2")
-            SimpleEvents.sendEvent("Testing", map)
+            map.put("parameter 3", "2")
+            map.put("parameter 4", "2")
+            map.put("parameter 5", "2")
+
+            val eventmap= HashMap<String,Any>()
+            eventmap.put("event_param",map);
+            AnalyticsEvents.sendEvent("TapPost", eventmap)
         }
 
+
     }
+
 }
