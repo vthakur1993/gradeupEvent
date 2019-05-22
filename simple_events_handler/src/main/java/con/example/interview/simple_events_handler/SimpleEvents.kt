@@ -70,10 +70,12 @@ class SimpleEvents {
                 }
 
                 try {
-                    map.put("event_name", eventName)
+                    map.put("event_name", eventName);
+                    map.put("event_timestamp",System.currentTimeMillis())
 
                     if (staticMap.size > 0)
                         map.putAll(staticMap)
+
 
                     val toJson = gson.toJson(map)
                     val gradeUpEvent = SimpleEventModel(event = toJson)
@@ -81,7 +83,7 @@ class SimpleEvents {
 
                     val gradeUpEvents = simpleEventViewModel.getEvents(database)
 
-                    if (gradeUpEvents.size > 5 || shouldSendEvent()) {
+                    if (gradeUpEvents.size > 0 || shouldSendEvent()) {
 
                         val jsonArray = JsonArray()
                         for (event in gradeUpEvents) {
