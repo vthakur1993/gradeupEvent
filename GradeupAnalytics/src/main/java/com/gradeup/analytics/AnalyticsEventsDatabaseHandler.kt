@@ -1,8 +1,9 @@
-package con.example.interview.simple_events_handler
+package com.gradeup.analytics
 
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
+
 
 class SimpleEventsDatabaseHandler(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
 

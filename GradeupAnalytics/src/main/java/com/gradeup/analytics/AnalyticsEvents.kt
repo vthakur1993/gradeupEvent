@@ -1,4 +1,4 @@
-package con.example.interview.simple_events_handler
+package com.gradeup.analytics
 
 import android.content.Context
 import android.net.ConnectivityManager
@@ -72,6 +72,7 @@ class SimpleEvents {
                 try {
                     map.put("event_name", eventName);
                     map.put("event_timestamp",System.currentTimeMillis())
+                    map.put("platform","ANDROID")
 
                     if (staticMap.size > 0)
                         map.putAll(staticMap)

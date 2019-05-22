@@ -1,4 +1,4 @@
-package con.example.interview.simple_events_handler
+package com.gradeup.analytics
 
 import android.arch.persistence.room.Entity
 import android.arch.persistence.room.PrimaryKey

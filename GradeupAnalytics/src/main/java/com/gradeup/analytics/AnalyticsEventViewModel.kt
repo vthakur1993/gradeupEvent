@@ -1,9 +1,11 @@
-package con.example.interview.simple_events_handler
+package com.gradeup.analytics
 
 import android.content.ContentValues
-import con.example.interview.simple_events_handler.SimpleEventsDatabaseHandler.Companion.EVENT
-import con.example.interview.simple_events_handler.SimpleEventsDatabaseHandler.Companion.ID
-import con.example.interview.simple_events_handler.SimpleEventsDatabaseHandler.Companion.TABLE_GRADEUP_EVENT
+import com.gradeup.analytics.SimpleEventsDatabaseHandler.Companion.EVENT
+import com.gradeup.analytics.SimpleEventsDatabaseHandler.Companion.ID
+import com.gradeup.analytics.SimpleEventsDatabaseHandler.Companion.TABLE_GRADEUP_EVENT
+import java.util.*
+
 
 class SimpleEventViewModel {
 
