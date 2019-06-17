@@ -73,6 +73,7 @@ class AnalyticsEvents {
                     map.put("event_name", eventName);
                     map.put("event_timestamp",System.currentTimeMillis())
                     map.put("platform","ANDROID")
+                    map.put("sdk_version","1.0")
 
                     if (staticMap.size > 0)
                         map.putAll(staticMap)
