@@ -45,16 +45,21 @@ class AnalyticsEvents {
         }
 
         fun init(context: Context, endpoint: String) {
-            database = AnalyticsEventsDatabaseHandler(context)
-            gson = Gson()
-            endpointUrl = endpoint
-            analyticsEventViewModel = AnalyticsEventViewModel()
+            try {
+                database = AnalyticsEventsDatabaseHandler(context)
+                gson = Gson()
+                endpointUrl = endpoint
+                analyticsEventViewModel = AnalyticsEventViewModel()
 
-            cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-            tm = context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
-            activeNetwork = cm.activeNetworkInfo
+                cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+                tm = context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
 
-            isInitialized = true
+                activeNetwork = cm.activeNetworkInfo
+
+                isInitialized = true
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
 
 
@@ -71,9 +76,9 @@ class AnalyticsEvents {
 
                 try {
                     map.put("event_name", eventName);
-                    map.put("event_timestamp",System.currentTimeMillis())
-                    map.put("platform","ANDROID")
-                    map.put("sdk_version","1.0")
+                    map.put("event_timestamp", System.currentTimeMillis())
+                    map.put("platform", "ANDROID")
+                    map.put("sdk_version", "1.0")
 
                     if (staticMap.size > 0)
                         map.putAll(staticMap)
