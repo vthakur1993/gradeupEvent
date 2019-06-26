@@ -9,8 +9,7 @@ import com.google.gson.Gson
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import java.io.IOException
 import java.io.OutputStream
 import java.net.HttpURLConnection
@@ -34,7 +33,7 @@ class AnalyticsEvents {
         private val CONNECT_TIMEOUT_MILLIS = 2000
         private val READ_TIMEOUT_MILLIS = 10000
         private lateinit var staticMap: HashMap<String, Any>
-
+        private lateinit var context: Context
         //these properties should be set if you need to send
         //some values for each event and thereby reducing redundant code
         fun setStaticProperties(map: HashMap<String, Any>) {
@@ -46,16 +45,11 @@ class AnalyticsEvents {
 
         fun init(context: Context, endpoint: String) {
             try {
+                this.context = context
                 database = AnalyticsEventsDatabaseHandler(context)
                 gson = Gson()
                 endpointUrl = endpoint
                 analyticsEventViewModel = AnalyticsEventViewModel()
-
-                cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-                tm = context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
-
-                activeNetwork = cm.activeNetworkInfo
-
                 isInitialized = true
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -64,56 +58,64 @@ class AnalyticsEvents {
 
 
         fun sendEvent(eventName: String, map: HashMap<String, Any>) {
-            GlobalScope.launch {
-
-                if (!isInitialized) {
-                    throw RuntimeException("Gradeup event not initialized")
-                }
-
-                if (endpointUrl.isEmpty()) {
-                    throw RuntimeException("Endpoint not initialized")
-                }
-
-                try {
-                    map.put("event_name", eventName);
-                    map.put("event_timestamp", System.currentTimeMillis())
-                    map.put("platform", "ANDROID")
-                    map.put("sdk_version", "1.0")
-
-                    if (staticMap.size > 0)
-                        map.putAll(staticMap)
-
-
-                    val toJson = gson.toJson(map)
-                    val gradeUpEvent = AnalyticsEventModel(event = toJson)
-                    analyticsEventViewModel.addEvent(gradeUpEvent, database)
-
-                    val gradeUpEvents = analyticsEventViewModel.getEvents(database)
-
-                    if (gradeUpEvents.size > 0 || shouldSendEvent()) {
-
-                        val jsonArray = JsonArray()
-                        for (event in gradeUpEvents) {
-                            val obj = JsonParser().parse(event.event).getAsJsonObject()
-                            jsonArray.add(obj)
+            CoroutineScope(Dispatchers.IO).launch {
+                withContext(Dispatchers.IO) {
+                    try {
+                        if (!isInitialized) {
+                            throw RuntimeException("Gradeup event not initialized")
                         }
 
-                        val jsonObject = JsonObject()
-                        jsonObject.add("events", jsonArray)
-                        if (sendDataToServer(jsonObject.toString())) {
-                            analyticsEventViewModel.deleteGradeUpEventsBeforeId(
-                                gradeUpEvents[gradeUpEvents.size - 1].id!!,
-                                database
-                            )
+                        if (endpointUrl.isEmpty()) {
+                            throw RuntimeException("Endpoint not initialized")
                         }
+
+
+                        map.put("event_name", eventName);
+                        map.put("event_timestamp", System.currentTimeMillis())
+                        map.put("platform", "ANDROID")
+                        map.put("sdk_version", "1.0")
+
+                        if (staticMap.size > 0)
+                            map.putAll(staticMap)
+
+
+                        val toJson = gson.toJson(map)
+                        val gradeUpEvent = AnalyticsEventModel(event = toJson)
+                        analyticsEventViewModel.addEvent(gradeUpEvent, database)
+
+                        val gradeUpEvents = analyticsEventViewModel.getEvents(database)
+
+                        if (gradeUpEvents.size > 0) {
+
+                            val jsonArray = JsonArray()
+                            for (event in gradeUpEvents) {
+                                val obj = JsonParser().parse(event.event).getAsJsonObject()
+                                jsonArray.add(obj)
+                            }
+
+                            val jsonObject = JsonObject()
+                            jsonObject.add("events", jsonArray)
+                            if (shouldSendEvent()) {
+                                if (sendDataToServer(jsonObject.toString())) {
+                                    analyticsEventViewModel.deleteGradeUpEventsBeforeId(
+                                        gradeUpEvents[gradeUpEvents.size - 1].id!!,
+                                        database
+                                    )
+                                }
+                            } else {
+                                Log.d("No internet Connection", "No internet Connection");
+
+                            }
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
                     }
-                } catch (e: Exception) {
-                    e.printStackTrace()
                 }
             }
+
         }
 
-        private fun sendDataToServer(dataString: String): Boolean {
+        fun sendDataToServer(dataString: String): Boolean {
             val endpoint = URL(endpointUrl)
             val conn = endpoint.openConnection() as HttpURLConnection
             conn.readTimeout = READ_TIMEOUT_MILLIS
@@ -136,25 +138,25 @@ class AnalyticsEvents {
 
                 }
             }
-            Log.e("response code is ", " :: " + conn.responseCode)
+            Log.d("responseCode", "responseCode" + conn.responseCode);
             return conn.responseCode == 200
         }
 
         private fun shouldSendEvent(): Boolean {
-            when (activeNetwork.type) {
-                ConnectivityManager.TYPE_WIFI -> return true
-                ConnectivityManager.TYPE_MOBILE -> {
-                    when (tm.networkType) {
-                        TelephonyManager.NETWORK_TYPE_LTE or TelephonyManager.NETWORK_TYPE_HSPAP ->
-                            return true
-
-                        else -> return false
-                    }
+            try {
+                if (context == null) {
+                    return false
                 }
+                val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+                var activeNetwork: NetworkInfo? = null
+                if (cm != null) {
+                    activeNetwork = cm.activeNetworkInfo
+                }
+                return activeNetwork != null && activeNetwork.isConnectedOrConnecting
+            } catch (e: Exception) {
+                return false
             }
-            return false
         }
-
 
     }
 
