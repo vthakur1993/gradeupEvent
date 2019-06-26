@@ -103,7 +103,6 @@ class AnalyticsEvents {
                                     )
                                 }
                             } else {
-                                Log.d("No internet Connection", "No internet Connection");
 
                             }
                         }
@@ -138,7 +137,6 @@ class AnalyticsEvents {
 
                 }
             }
-            Log.d("responseCode", "responseCode" + conn.responseCode);
             return conn.responseCode == 200
         }
 
