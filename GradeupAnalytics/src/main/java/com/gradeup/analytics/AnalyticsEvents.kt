@@ -62,11 +62,11 @@ class AnalyticsEvents {
                 withContext(Dispatchers.IO) {
                     try {
                         if (!isInitialized) {
-                            throw RuntimeException("Gradeup event not initialized")
+                            Log.d("Gradeup", "Gradeup event not initialized");
                         }
 
                         if (endpointUrl.isEmpty()) {
-                            throw RuntimeException("Endpoint not initialized")
+                            Log.d("Gradeup", "Endpoint not initialized");
                         }
 
 
