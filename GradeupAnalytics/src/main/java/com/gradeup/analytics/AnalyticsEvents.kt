@@ -25,7 +25,7 @@ class AnalyticsEvents {
         private lateinit var cm: ConnectivityManager
         private lateinit var tm: TelephonyManager
         private lateinit var activeNetwork: NetworkInfo
-
+        private var jsonArrayList = ArrayList<JsonArray>()
         private lateinit var endpointUrl: String
         private lateinit var analyticsEventViewModel: AnalyticsEventViewModel
 
@@ -87,24 +87,34 @@ class AnalyticsEvents {
 
                         if (gradeUpEvents.size > 0) {
 
-                            val jsonArray = JsonArray()
+                            var jsonArray = JsonArray()
                             for (event in gradeUpEvents) {
                                 val obj = JsonParser().parse(event.event).getAsJsonObject()
                                 jsonArray.add(obj)
-                            }
 
-                            val jsonObject = JsonObject()
-                            jsonObject.add("events", jsonArray)
-                            if (shouldSendEvent()) {
-                                if (sendDataToServer(jsonObject.toString())) {
-                                    analyticsEventViewModel.deleteGradeUpEventsBeforeId(
-                                        gradeUpEvents[gradeUpEvents.size - 1].id!!,
-                                        database
-                                    )
+                                if (jsonArray.size() == 5) {
+                                    jsonArrayList.add(jsonArray)
+                                    jsonArray = JsonArray()
                                 }
-                            } else {
-
                             }
+
+                            if (jsonArray.size() > 0) {
+                                jsonArrayList.add(jsonArray)
+                            }
+
+                            for (temp in jsonArrayList) {
+                                val jsonObject = JsonObject()
+                                jsonObject.add("events", temp)
+                                if (shouldSendEvent()) {
+                                    if (sendDataToServer(jsonObject.toString())) {
+                                        analyticsEventViewModel.deleteGradeUpEventsBeforeId(
+                                            gradeUpEvents[gradeUpEvents.size - 1].id!!,
+                                            database
+                                        )
+                                    }
+                                }
+                            }
+                            jsonArrayList.clear()
                         }
                     } catch (e: Exception) {
                         e.printStackTrace()
